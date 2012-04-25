@@ -2,8 +2,7 @@ require "spec_helper"
 
 describe "resource -- project" do
   before(:each) do
-    @code = "RTsDXvNZN+eSfmw73M8qOBxbRJh9792bXevvj7KQ8nd3oSnVdFvYRZIAQtldPzVDk6pG5eQZEiIYpZVOYU9/7g=="
-    @harvest = HarvestOauthClient.create(@code, "paulsercomp")
+    @harvest = HarvestOauthClient.create(get_access_token(), "paulsercomp")
   end
 
 
@@ -17,23 +16,37 @@ describe "resource -- project" do
       @projects = @harvest.project.all
 
       proj_params = {
-        :name       => "Rspec test project #{rand(2**128).to_s(16)}",
+        :name       => "Rspec test project #{random_hash(128)}",
         :active     => true,
         :client_id  => 983566
       }
-      project_resp = @harvest.project.create(proj_params)
-      @new_proj_id = project_resp.headers['Location'].gsub(/\D/, '').try(:to_i)
+      @new_proj = @harvest.project.create(proj_params)
+    end
+
+    after do
+      @new_proj.delete
     end
 
     it 'should show particular project' do
-      project = @harvest.project.find(@new_proj_id)
+      project = @harvest.project.find(@new_proj.id)
       project.class.should == HarvestOauthClient::Resources::Project
     end
 
     it 'should update particular project' do
-      project = @harvest.project.find(@new_proj_id)
-      project.name = "Renamed test project!!"
+      project = @harvest.project.find(@new_proj.id)
+      project.name = "Renamed test project!! #{random_hash(128)}"
       result = project.save
+      result.should be_true
+    end
+
+    it 'should delete particular project' do
+      proj_params = {
+        :name       => "Rspec project for delete #{random_hash(128)}",
+        :active     => true,
+        :client_id  => 983566
+      }
+      proj = @harvest.project.create(proj_params)
+      result = proj.delete
       result.should be_true
     end
 

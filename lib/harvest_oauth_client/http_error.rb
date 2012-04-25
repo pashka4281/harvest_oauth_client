@@ -10,7 +10,7 @@ module HarvestOauthClient
     end
 
     def to_s
-      error_message = message.blank? ? '': ', message' + message
+      error_message = message.blank? ? '': ', error_message: ' + message
       "#{self.class.to_s} : #{response.code} URI: #{@params[:uri]} #{error_message}"
     end
   end

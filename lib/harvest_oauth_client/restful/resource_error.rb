@@ -15,6 +15,7 @@ module HarvestOauthClient
     class ResourceNotRegistered < ResourceError; end
     class WrongResponseName < ResourceError; end
     class ParentParamsNotComplete < ResourceError; end
+    class BlankIdError < ResourceError; end
     
   end
 end

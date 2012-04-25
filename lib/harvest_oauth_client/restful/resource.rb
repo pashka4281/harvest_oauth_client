@@ -17,17 +17,33 @@ module HarvestOauthClient
         params.each{|key, value| self.send("#{key.underscore}=", value) }
       end
 
+      #instance methods: 
       def save
         attrs_with_vals = {}
+        attrs_with_vals[:parent_id] = self.send(self.class.parent_info[:key]) if !self.class.parent_info.blank?
         self.class.attributes.reject{|x| NOT_UPDATEABLE_KEYS.include?(x) }.each{|attr| attrs_with_vals[attr] = self.send(attr) }
         begin
           self.class.update(self.id, attrs_with_vals)
-        rescue HttpError => e.inspect
+        rescue HttpError => e
           puts e
           return false
         end
         return true
       end
+
+      def delete
+        raise BlankIdError.new("Can't delete resource without an id") if self.id.blank?
+        params = {}
+        params[:parent_id] = self.send(self.class.parent_info[:key]) if !self.class.parent_info.blank?
+        begin
+          self.class.delete(self.id, params)
+        rescue HttpError => e
+          puts e
+          return false
+        end
+        return true
+      end
+
 
 	    #class methods:
       class << self
@@ -41,10 +57,15 @@ module HarvestOauthClient
           @attributes
         end
 
+
         def has_attributes(*args)
           @attributes = args
           this = self
           @attributes.each{|attr| this.send(:attr_accessor, attr)}
+        end
+
+        def parent_info
+          @parent_info
         end
 
         #<=== resources relations methods:
@@ -53,16 +74,17 @@ module HarvestOauthClient
           raise ResourceNotRegistered.new(res) unless @@descendants_names.include?(res)
           @parent_class = @@descendants_hash[res]
           @parent_name = res
+          @parent_info = {:class => @parent_class, :name => @parent_name, :key => foreign_key}
 
           define_method(res) do
-            #raise AttributeNotFound.new(foreign_key) if @attributes[foreign_key.to_sym].blank?
-            self.class.descendants_hash[res].show_obj(self.send(foreign_key.to_sym))
+            raise AttributeNotFound.new(foreign_key) if self.class.attributes[foreign_key.to_sym].blank?
+            self.class.descendants_hash[res].find(self.send(foreign_key.to_sym))
           end
         end
 
         def has_many(resources, params={})
           define_method(resources) do
-            self.class.descendants_hash[resources.to_s.singularize.to_sym].index_obj(:parent_id => self.id)
+            self.class.descendants_hash[resources.to_s.singularize.to_sym].all(:parent_id => self.id)
           end
         end
         # ===> end
@@ -79,11 +101,9 @@ module HarvestOauthClient
 
           # prepend this if belongs_to declared:
           prefix = parent_id.blank? ? '': "/#{@parent_name.to_s.gsub(':','').pluralize}/#{parent_id}"
-          # append this if has_many declared:
-          postfix = '' #TODO: finish this
 
           path = id.nil? ? base_path() + '.json' : base_path() + "/#{id}.json"
-          prefix + path + postfix
+          prefix + path
         end
 
         def make_uri(id=nil, parent_id=nil)
@@ -116,6 +136,7 @@ module HarvestOauthClient
         def	create(params = {})
           parent_id = params.delete(:parent_id)
           resp = request(:post, self.make_uri(nil, parent_id), JSON(response_name => params))
+          self.new(params.merge(:id => resp.headers['Location'].gsub(/\D/, '').try(:to_i)))
         end
         # <==== end
 
@@ -138,6 +159,7 @@ module HarvestOauthClient
         protected
 
         def request(method, uri, options = {})
+          # puts uri
           params = {}
           params[:uri] = uri
           params[:options] = options
