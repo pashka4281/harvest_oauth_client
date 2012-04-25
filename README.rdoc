@@ -1,0 +1,5 @@
+= HarvestOauthClient
+
+The project was originally developed for Bidsketch.com
+
+2012
