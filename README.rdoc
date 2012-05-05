@@ -1,5 +1,23 @@
 = HarvestOauthClient
 
+=== Example Usage:
+
+harvest = HarvestOauthClient.create(access_token, 'harvest_subdomain')
+
+all descendants of HarvestOauthClient::Restful::Resource are automatically loaded and creates 
+appropriate methods for HarvestOauthClient::Client : 
+
+* harvest.client
+* harvest.project
+etc.
+
+== Manipulating resources:
+client = harvest.client.create(:name => 'New Client', :email => 'email@mailbox.com')
+client.update(:name => 'Another client') # => true
+client.delete() #=> true
+
+
+
 The project was originally developed for Bidsketch.com
 
 2012
