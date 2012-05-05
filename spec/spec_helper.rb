@@ -9,7 +9,7 @@ def random_hash(power)
 end
 
 def get_access_token()
-	"EV4F5WFLvecjnl7+TOpwlMF75z2NEG0VpDB4/mKUQ7UpRYT8W4kRmPq4TOG4q7xg5njZCNXnWYSCrnYx66eCgQ=="
+	"IefGphDqRpDRkkydEz0KvwwWvsMsfFL9di4zMkWi8Eyra94IAY4z1lBti4Lsd+I9O4BMkQb+9suOrJQvPqSDLQ=="
 end
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration

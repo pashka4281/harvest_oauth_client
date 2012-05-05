@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe "resource -- project" do
+describe "client -- project" do
   before(:each) do
     @harvest = HarvestOauthClient.create(get_access_token(), "paulsercomp")
   end

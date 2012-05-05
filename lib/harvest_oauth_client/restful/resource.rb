@@ -3,12 +3,15 @@ module HarvestOauthClient
     class Resource
 	    include HarvestOauthClient::CommonVars
 
+
       @@descendants = []
       @@descendants_names = []
       @@descendants_hash = {}
 
       cattr_writer :token
       cattr_reader :descendants, :descendants_hash
+      cattr_accessor :list_response_class
+      @@list_response_class = HarvestOauthClient::Restful::ListResponse #HarvestOauthClient::Restful::Response or other class inherited form it
 	
       #constructor
       def initialize(params={})
@@ -106,8 +109,10 @@ module HarvestOauthClient
           prefix + path
         end
 
-        def make_uri(id=nil, parent_id=nil)
-          API_HOST + make_path(id, parent_id) #API_HOST is declared in HarvestOauthClient::CommonVars module
+        def make_uri(id=nil, parent_id=nil, uri_params={})
+          uri_params ||= {}
+          http_params = uri_params.empty? ? '' : "?#{uri_params.to_params}"
+          API_HOST + make_path(id, parent_id) + http_params #API_HOST is declared in HarvestOauthClient::CommonVars module
         end
         # ===> end
 
@@ -115,27 +120,27 @@ module HarvestOauthClient
 
         def index(params={})
           parent_id = params.delete(:parent_id)
-          resp = request(:get, self.make_uri(nil, parent_id))
+          request(:get, self.make_uri(nil, parent_id, params[:uri_params]))
         end
 
         def delete(id, params={})
           parent_id = params.delete(:parent_id)
-          resp = request(:delete, self.make_uri(id, parent_id))
+          request(:delete, self.make_uri(id, parent_id, params[:uri_params]))
         end
 
         def show(id, params={})
           parent_id = params.delete(:parent_id)
-          resp = request(:get, self.make_uri(id, parent_id))
+          request(:get, self.make_uri(id, parent_id, params[:uri_params]))
         end
 
         def update(id, params = {})
           parent_id = params.delete(:parent_id)
-          resp = request(:put, self.make_uri(id, parent_id), JSON(response_name => params))
+          request(:put, self.make_uri(id, parent_id, params[:uri_params]), JSON(response_name => params))
         end
 
         def	create(params = {})
           parent_id = params.delete(:parent_id)
-          resp = request(:post, self.make_uri(nil, parent_id), JSON(response_name => params))
+          resp = request(:post, self.make_uri(nil, parent_id, params[:uri_params]), JSON(response_name => params))
           self.new(params.merge(:id => resp.headers['Location'].gsub(/\D/, '').try(:to_i)))
         end
         # <==== end
@@ -145,10 +150,15 @@ module HarvestOauthClient
           self.name.demodulize.underscore
         end
 
+        def	count(params={})
+          JSON.parse(index(params).body).count
+        end
+
         def	all(params={})
           resp_arr = JSON.parse(index(params).body)
           this = self
-          resp_arr.collect{|x| this.new(x[response_name()])}
+          resp_arr.collect!{|x| this.new(x[response_name()])}
+          @@list_response_class.new(resp_arr)
         end
 
         def	find(id, params={})
@@ -156,10 +166,16 @@ module HarvestOauthClient
           self.new(resp_hash)
         end
 
+        #basic account info,
+        #light-weight call, could be used for checking the api for accessibility
+        def who_i_am
+          JSON.parse(request(:get, "https://api.harvestapp.com/account/who_am_i.json").body)
+        end
+
         protected
 
         def request(method, uri, options = {})
-          # puts uri
+          puts uri
           params = {}
           params[:uri] = uri
           params[:options] = options
