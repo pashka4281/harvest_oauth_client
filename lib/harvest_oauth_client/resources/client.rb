@@ -8,6 +8,9 @@ module HarvestOauthClient
         :highrise_id, :id, :default_invoice_timeframe, :cache_version,
         :currency_symbol, :currency, :active)
 
+      class << self
+        alias :get :find
+      end
     end
   end
 end

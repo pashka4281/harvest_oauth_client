@@ -1,17 +1,15 @@
 module HarvestOauthClient
   class HttpError < StandardError
-    attr_reader :response, :params, :message
+    attr_reader :response, :params
 
     def initialize(response, params = {})
       @response = response
       @params = params
-      @message = JSON.parse(response.body)['message']
       super(response)
     end
 
     def to_s
-      error_message = message.blank? ? '': ', error_message: ' + message
-      "#{self.class.to_s} : #{response.code} URI: #{@params[:uri]} #{error_message}"
+      "#{self.class.to_s} : #{response.code} URI: #{@params[:uri]}"
     end
   end
 

@@ -8,6 +8,7 @@ module HarvestOauthClient
       @@descendants_names = []
       @@descendants_hash = {}
 
+      attr_accessor :error
       cattr_writer :token
       cattr_reader :descendants, :descendants_hash
       cattr_accessor :list_response_class
@@ -59,7 +60,6 @@ module HarvestOauthClient
         def attributes
           @attributes
         end
-
 
         def has_attributes(*args)
           @attributes = args
@@ -175,7 +175,7 @@ module HarvestOauthClient
         protected
 
         def request(method, uri, options = {})
-          puts uri
+          puts "[#{method.to_s.upcase}]: #{uri}"
           params = {}
           params[:uri] = uri
           params[:options] = options
@@ -184,16 +184,21 @@ module HarvestOauthClient
           response = @@token.send(method, uri, options)   #options should be JSON array
 
           params[:response] = response.inspect.to_s
+#          puts params[:response]
+          puts options.inspect
           case response.code
             when 200..201
               response
             when 400
               raise HarvestOauthClient::BadRequest.new(response, params)
             when 401
+              @error = "HARVEST ERROR: Expired access token"
               raise HarvestOauthClient::BadOrExpiredToken.new(response, params)
             when 404
+              @error = "HARVEST ERROR: Url not found"
               raise HarvestOauthClient::NotFound.new(response, params)
             when 500
+              @error = "HARVEST ERROR: API server error"
               raise HarvestOauthClient::ServerError.new(response, params)
             when 502
               raise HarvestOauthClient::Unavailable.new(response, params)
@@ -203,7 +208,6 @@ module HarvestOauthClient
               raise HarvestOauthClient::InformHarvest.new(response, params)
           end
         end
-
 
       end
 	

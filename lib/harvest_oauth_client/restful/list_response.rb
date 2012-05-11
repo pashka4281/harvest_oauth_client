@@ -8,15 +8,14 @@ module HarvestOauthClient
       def initialize(args)
         @current_page = 1
         @per_page = 10
+        @total_entries = 1
+        @total_pages = 1
 
         super(args)
       end
 
       attr_accessor :error, :total, :total_pages
 
-      def count
-        self.total_entries
-      end
 
     end
 

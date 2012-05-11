@@ -2,13 +2,13 @@ module HarvestOauthClient
   class Client
     include HarvestOauthClient::CommonVars
 
-    cattr_accessor :resources_list
+    cattr_accessor :resources_list, :subdomain
     @@resources_list = HarvestOauthClient::Restful::Resource.descendants
     attr_accessor :token
 	
 
     def initialize(access_token, subdomain)
-      @subdomain = subdomain
+      @@subdomain = subdomain
       @token = Rack::OAuth2::AccessToken::Bearer.new(:access_token => access_token)
       @resources = {}
       HarvestOauthClient::Restful::Resource.token = @token
@@ -20,7 +20,7 @@ module HarvestOauthClient
       end
 
       #checking if current access_token is valid: 
-#      HarvestOauthClient::Restful::Resource.who_i_am()
+      HarvestOauthClient::Restful::Resource.who_i_am()
     end
 	
     #Example:  client.resources(:project) => HarvestOauthClient::Resources::Project
