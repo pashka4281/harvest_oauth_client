@@ -9,8 +9,8 @@ require File.expand_path('../harvest_oauth_client/client',__FILE__)
 
 module HarvestOauthClient
 
-  def self.create(access_token, subdomain)
-    HarvestOauthClient::Client.new(access_token, subdomain)
+  def self.create(access_token, subdomain, params={})
+    HarvestOauthClient::Client.new(access_token, subdomain, params)
   end
 
 end

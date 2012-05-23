@@ -10,6 +10,19 @@ module HarvestOauthClient
 
       class << self
         alias :get :find
+
+        def create_with_contacts(params={})
+          client = self.create(:name => [params[:first_name], params[:last_name]].join(' '))
+          contact_params ={
+            :email        => params[:email],
+            :first_name   => params[:first_name],
+            :last_name    => params[:last_name],
+            :phone_office => params[:work_phone],
+            :parent_id    => client.id
+          }
+          HarvestOauthClient::Resources::Contact.create(contact_params)
+          client
+        end
       end
     end
   end

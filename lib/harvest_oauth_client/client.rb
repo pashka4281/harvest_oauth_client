@@ -2,12 +2,12 @@ module HarvestOauthClient
   class Client
     include HarvestOauthClient::CommonVars
 
-    cattr_accessor :resources_list, :subdomain
+    cattr_accessor :resources_list, :subdomain, :strict_mode
     @@resources_list = HarvestOauthClient::Restful::Resource.descendants
     attr_accessor :token
 	
 
-    def initialize(access_token, subdomain)
+    def initialize(access_token, subdomain, params={})
       @@subdomain = subdomain
       @token = Rack::OAuth2::AccessToken::Bearer.new(:access_token => access_token)
       @resources = {}

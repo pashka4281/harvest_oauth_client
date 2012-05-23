@@ -76,8 +76,8 @@ module HarvestOauthClient
           foreign_key = params.delete(:foreign_key) || res.to_s.gsub(':','').foreign_key
           raise ResourceNotRegistered.new(res) unless @@descendants_names.include?(res)
           @parent_class = @@descendants_hash[res]
-          @parent_name = res
-          @parent_info = {:class => @parent_class, :name => @parent_name, :key => foreign_key}
+          @parent_class_name = res
+          @parent_info = {:class => @parent_class, :name => @parent_class_name, :key => foreign_key}
 
           define_method(res) do
             raise AttributeNotFound.new(foreign_key) if self.class.attributes[foreign_key.to_sym].blank?
@@ -98,14 +98,14 @@ module HarvestOauthClient
         end
 
         def make_path(id=nil, parent_id=nil)
-          if (!parent_id.nil? && @parent_name.nil?) || (parent_id.nil? && !@parent_name.nil?)
+          if (!parent_id.nil? && @parent_class_name.nil?) || (parent_id.nil? && !@parent_class_name.nil?)
             raise ParentParamsNotComplete.new("You should specify both belongs_to() and :parent_id for relative associations")
           end
 
           # prepend this if belongs_to declared:
-          prefix = parent_id.blank? ? '': "/#{@parent_name.to_s.gsub(':','').pluralize}/#{parent_id}"
+          prefix = parent_id.blank? ? '': "/#{@parent_class_name.to_s.gsub(':','').pluralize}/#{parent_id}"
 
-          path = id.nil? ? base_path() + '.json' : base_path() + "/#{id}.json"
+          path = id.nil? ? base_path() : base_path() + "/#{id}"
           prefix + path
         end
 
@@ -169,39 +169,40 @@ module HarvestOauthClient
         #basic account info,
         #light-weight call, could be used for checking the api for accessibility
         def who_i_am
-          JSON.parse(request(:get, "https://api.harvestapp.com/account/who_am_i.json").body)
+          JSON.parse(request(:get, "https://api.harvestapp.com/account/who_am_i").body)
         end
 
         protected
 
         def request(method, uri, options = {})
-          puts "[#{method.to_s.upcase}]: #{uri}"
           params = {}
           params[:uri] = uri
           params[:options] = options
           params[:method] = method
 
-          response = @@token.send(method, uri, options)   #options should be JSON array
-
+          headers = [['Accept', 'application/json'], ['Content-Type', 'application/json']]
+          response = @@token.send(method, uri, options, headers)   #options should be JSON array
+          
           params[:response] = response.inspect.to_s
-#          puts params[:response]
-          puts options.inspect
           case response.code
             when 200..201
               response
             when 400
-              raise HarvestOauthClient::BadRequest.new(response, params)
+              @error = "HARVEST ERROR: #{JSON.parse(response.body)['message']}"
+              raise HarvestOauthClient::BadRequest.new(response, params, @error) 
             when 401
-              @error = "HARVEST ERROR: Expired access token"
               raise HarvestOauthClient::BadOrExpiredToken.new(response, params)
             when 404
-              @error = "HARVEST ERROR: Url not found"
-              raise HarvestOauthClient::NotFound.new(response, params)
+              raise HarvestOauthClient::NotFound.new(response, params) 
+            when 422
+              @error = "HARVEST ERROR: #{JSON.parse(response.body)['message']}"
+              raise HarvestOauthClient::UnprocessibleEntry.new(response, params, @error)
             when 500
               @error = "HARVEST ERROR: API server error"
               raise HarvestOauthClient::ServerError.new(response, params)
             when 502
-              raise HarvestOauthClient::Unavailable.new(response, params)
+              @error = "HARVEST ERROR: API server unavailable"
+              raise HarvestOauthClient::Unavailable.new(response, params, @error)
             when 503
               raise HarvestOauthClient::RateLimited.new(response, params)
             else
