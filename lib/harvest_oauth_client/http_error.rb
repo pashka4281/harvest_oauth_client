@@ -1,6 +1,6 @@
 module HarvestOauthClient
   class HttpError < StandardError
-    attr_reader :response, :params
+    attr_reader :response, :params, :server_message
 
     def initialize(response, params = {}, server_message = '')
       @response = response

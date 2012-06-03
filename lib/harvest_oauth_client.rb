@@ -1,5 +1,6 @@
 require File.expand_path('../harvest_oauth_client/restful/list_response',__FILE__)
 require File.expand_path('../harvest_oauth_client/http_error',__FILE__)
+require File.expand_path('../harvest_oauth_client/currency_helper',__FILE__)
 require File.expand_path('../harvest_oauth_client/restful/resource_error',__FILE__)
 require File.expand_path('../harvest_oauth_client/common_vars',__FILE__)
 require File.expand_path('../harvest_oauth_client/restful/resource',__FILE__)

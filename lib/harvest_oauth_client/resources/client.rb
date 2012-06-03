@@ -7,12 +7,28 @@ module HarvestOauthClient
       has_attributes(:name, :created_at, :details, :updated_at, :last_invoice_kind,
         :highrise_id, :id, :default_invoice_timeframe, :cache_version,
         :currency_symbol, :currency, :active)
+      
+      attr_accessor :not_found
 
       class << self
-        alias :get :find
+        def get(id, params={})
+          begin
+            resp_hash = JSON.parse(show(id, params).body)[response_name()]
+            client = self.new(resp_hash)
+          rescue HarvestOauthClient::NotFound
+            client = self.new(:not_found => true)
+          end
+          client
+        end
 
         def create_with_contacts(params={})
-          client = self.create(:name => [params[:first_name], params[:last_name]].join(' '))
+          begin
+            client = self.create(:name => [params[:first_name], params[:last_name]].join(' '))
+          rescue HarvestOauthClient::BadRequest => e
+            return self.new(:error => e.server_message)
+          rescue HarvestOauthClient::ServerError => e
+            return self.new(:error => e.server_message)
+          end
           contact_params ={
             :email        => params[:email],
             :first_name   => params[:first_name],

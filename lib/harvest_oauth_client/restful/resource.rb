@@ -188,20 +188,16 @@ module HarvestOauthClient
             when 200..201
               response
             when 400
-              @error = "HARVEST ERROR: #{JSON.parse(response.body)['message']}"
               raise HarvestOauthClient::BadRequest.new(response, params, @error) 
             when 401
               raise HarvestOauthClient::BadOrExpiredToken.new(response, params)
             when 404
               raise HarvestOauthClient::NotFound.new(response, params) 
             when 422
-              @error = "HARVEST ERROR: #{JSON.parse(response.body)['message']}"
               raise HarvestOauthClient::UnprocessibleEntry.new(response, params, @error)
             when 500
-              @error = "HARVEST ERROR: API server error"
               raise HarvestOauthClient::ServerError.new(response, params)
             when 502
-              @error = "HARVEST ERROR: API server unavailable"
               raise HarvestOauthClient::Unavailable.new(response, params, @error)
             when 503
               raise HarvestOauthClient::RateLimited.new(response, params)

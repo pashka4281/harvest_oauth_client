@@ -46,14 +46,22 @@ module HarvestOauthClient
         def	create(params = {})
           parent_id = params.delete(:parent_id)
           resp = request(:post, self.make_uri(nil, parent_id, params[:uri_params]), JSON({'invoice' => params}))
-#          self.new(params.merge(:id => resp.headers['Location'].gsub(/\D/, '').try(:to_i)))
           self.find(resp.headers['Location'].gsub(/\D/, '').try(:to_i))
         end
 
         def create_from_proposal(client_id, proposal = nil)
-          params = {:state => 'draft', :client_id => client_id, :subject => (!!proposal ? proposal.project_name : '')}
+          params = {:state => 'draft',
+            :client_id => client_id,
+            :subject => (!!proposal ? proposal.project_name : ''),
+            :currency => (!!proposal ? HarvestOauthClient::CurrencyHelper.get_full_name(proposal.currency) : '')}
           params.merge!(self.populate_from_proposal(proposal)) unless proposal.blank? || proposal.proposalfees.empty?
-          self.create(params)
+          begin
+            self.create(params)
+          rescue HarvestOauthClient::BadRequest => e
+            return self.new(:error => e.server_message)
+          rescue HarvestOauthClient::ServerError => e
+            return self.new(:error => e.server_message)
+          end
         end
 
         def response_name
@@ -61,8 +69,7 @@ module HarvestOauthClient
         end
       end
 
-
-      #TODO: complete next methods:
+      #instance methods: 
       def status_class
         case self.state
         when 'paid'
@@ -87,9 +94,8 @@ module HarvestOauthClient
       end
 
       #currency looks like "Euro - EUR" or "United States Dollars - USD"
-      # so just need to get 3 last characters from it
       def currency_code
-        self.currency.blank? ? '' : self.currency[-3..-1]
+        self.currency.blank? ? '' : HarvestOauthClient::CurrencyHelper.get_short_name(self.currency)
       end
 
       alias :date :issued_at

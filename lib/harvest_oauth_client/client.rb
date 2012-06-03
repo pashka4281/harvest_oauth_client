@@ -2,7 +2,7 @@ module HarvestOauthClient
   class Client
     include HarvestOauthClient::CommonVars
 
-    cattr_accessor :resources_list, :subdomain, :strict_mode
+    cattr_accessor :resources_list, :subdomain
     @@resources_list = HarvestOauthClient::Restful::Resource.descendants
     attr_accessor :token
 	
