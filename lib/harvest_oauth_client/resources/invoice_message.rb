@@ -1,7 +1,6 @@
 module HarvestOauthClient
   module Resources
     class InvoiceMessage < HarvestOauthClient::Restful::Resource
-      belongs_to :invoice
 
       has_attributes(:sent_by_email, :thank_you, :include_pay_pal_link, :created_at,
                      :full_recipient_list, :bounced_at, :body, :updated_at,

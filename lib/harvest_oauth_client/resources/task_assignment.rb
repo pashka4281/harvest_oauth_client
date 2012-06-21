@@ -2,8 +2,6 @@ module HarvestOauthClient
   module Resources
     class TaskAssignment < HarvestOauthClient::Restful::Resource
 
-      belongs_to(:project)
-
       has_attributes(:id, :project_id, :task_id, :billable, :deactivated, :budget, :hourly_rate, :updated_at, :created_at)
 
 

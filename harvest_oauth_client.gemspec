@@ -7,11 +7,10 @@ require "harvest_oauth_client/version"
 Gem::Specification.new do |s|
   s.name        = "harvest_oauth_client"
   s.version     = HarvestOauthClient::VERSION
-  s.authors     = ["TODO: Your name"]
-  s.email       = ["TODO: Your email"]
-  s.homepage    = "TODO"
-  s.summary     = "TODO: Summary of HarvestOauthClient."
-  s.description = "TODO: Description of HarvestOauthClient."
+  s.authors     = ["Paul Ser"]
+  s.email       = ["pashka4281@gmail.com"]
+  s.summary     = "A Harvestapp.com API wrapper gem with oauth2 support"
+  s.description = ""
 
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.rdoc"]
   s.test_files = Dir["test/**/*"]

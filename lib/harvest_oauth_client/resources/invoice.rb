@@ -1,8 +1,6 @@
 module HarvestOauthClient
   module Resources
     class Invoice < HarvestOauthClient::Restful::Resource
-      has_many(:invoice_messages)
-      has_many(:invoice_payments)
 
       has_attributes(:tax2_amount, :tax2, :client_key, :recurring_invoice_id, :currency, :purchase_order, :state,
         :period_start, :issued_at, :retainer_id, :notes, :created_at, :discount, :discount_amount,
@@ -12,11 +10,16 @@ module HarvestOauthClient
       attr_accessor :status_class, :not_found
 
       class << self
+
+        def	find(id, params={})
+          resp_hash = JSON.parse(show(id, params).body)
+          puts resp_hash.inspect
+          self.new(resp_hash['invoice'])
+        end
         
         def get(id, params={})
           begin
-            resp_hash = JSON.parse(show(id, params).body)[response_name()]
-            invoice = self.new(resp_hash)
+            invoice = find(id, params)
           rescue HarvestOauthClient::NotFound
             invoice = self.new(:not_found => true)
           end
@@ -65,7 +68,7 @@ module HarvestOauthClient
         end
 
         def response_name
-          'doc'
+          'invoices'
         end
       end
 

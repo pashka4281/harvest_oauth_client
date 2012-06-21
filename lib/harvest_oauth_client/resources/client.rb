@@ -2,13 +2,13 @@ module HarvestOauthClient
   module Resources
     class Client < HarvestOauthClient::Restful::Resource
 
-      has_many(:contacts)
-
       has_attributes(:name, :created_at, :details, :updated_at, :last_invoice_kind,
         :highrise_id, :id, :default_invoice_timeframe, :cache_version,
         :currency_symbol, :currency, :active)
       
       attr_accessor :not_found
+
+      has_many(:contacts)
 
       class << self
         def get(id, params={})
@@ -35,6 +35,7 @@ module HarvestOauthClient
             :last_name    => params[:last_name],
             :phone_office => params[:work_phone],
             :parent_id    => client.id
+#            :client_id    => client.id
           }
           HarvestOauthClient::Resources::Contact.create(contact_params)
           client

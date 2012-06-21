@@ -23,12 +23,5 @@ module HarvestOauthClient
       HarvestOauthClient::Restful::Resource.who_i_am()
     end
 	
-    #Example:  client.resources(:project) => HarvestOauthClient::Resources::Project
-    def	resources(res_name)
-      raise ResourceNotRegistered.new(res_name) if !@resources.has_key?(res_name)
-      @resources[res_name]
-    end
-
   end
-
 end

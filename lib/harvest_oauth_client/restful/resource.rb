@@ -151,14 +151,30 @@ module HarvestOauthClient
         end
 
         def	count(params={})
-          JSON.parse(index(params).body).count
+          page = params[:uri_params].try(:[], :page) || 1
+          amount = 0
+          while page < 10
+            cnt = JSON.parse(index(params).body).count
+            amount += cnt
+            page += 1
+            params.merge!(:uri_params=>{:page => page})
+            return amount if cnt < 50
+          end
+          amount
         end
 
         def	all(params={})
-          resp_arr = JSON.parse(index(params).body)
           this = self
-          resp_arr.collect!{|x| this.new(x[response_name()])}
-          @@list_response_class.new(resp_arr)
+          page = params[:uri_params].try(:[], :page) || 1
+          all_items = []
+          while page < 10
+            current_set = JSON.parse(index(params).body).collect{|x| this.new(x[response_name()])}
+            all_items += current_set
+            page += 1
+            params.merge!(:uri_params=>{:page => page})
+            return @@list_response_class.new(all_items) if current_set.count < 50
+          end
+          @@list_response_class.new(all_items)
         end
 
         def	find(id, params={})
@@ -182,8 +198,9 @@ module HarvestOauthClient
 
           headers = [['Accept', 'application/json'], ['Content-Type', 'application/json']]
           response = @@token.send(method, uri, options, headers)   #options should be JSON array
-          
-          params[:response] = response.inspect.to_s
+
+          puts "[HARVEST] #{method.to_s.upcase}: #{uri}"
+#          puts params.inspect
           case response.code
             when 200..201
               response
